@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <title>随手记</title>
+    <link rel="stylesheet" href="sidepanel.css" />
+  </head>
+  <body>
+    <div class="toolbar">
+      <button id="html" class="btn">下载 .html</button>
+      <button id="md" class="btn">下载 .md</button>
+      <button id="copy" class="btn">复制</button>
+      <button id="clear" class="btn">清空</button>
+      <button id="settings" class="btn icon-btn" title="设置">
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      </button>
+    </div>
+
+    <div id="list" class="list">
+      <div id="empty" class="empty">
+        选中网页文字或区域，右键即可摘录/截图……<br />也可以直接在下面写一条。
+      </div>
+    </div>
+
+    <div class="compose">
+      <div class="compose-header">
+        <button id="toggle-expand" class="expand-btn" title="最大化/还原输入区">
+          <svg id="expand-icon" xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="7 15 12 20 17 15"/><line x1="12" y1="4" x2="12" y2="20"/><polyline points="7 9 12 4 17 9"/></svg>
+        </button>
+        <span>输入与编辑</span>
+      </div>
+      <div class="input-wrap">
+        <textarea id="input" rows="3" placeholder="写一条笔记…"></textarea>
+        <button id="add" class="add-btn" title="追加">
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <div id="ver" class="ver"></div>
+
+    <div id="confirm-mask" class="mask hidden">
+      <div class="dialog">
+        <p>确定要清空所有笔记吗？<br />此操作不可撤销。</p>
+        <div class="dialog-actions">
+          <button id="cancel" class="btn">取消</button>
+          <button id="confirm-clear" class="btn danger">清空</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="settings-mask" class="mask hidden">
+      <div class="settings-dialog">
+        <div class="settings-header">
+          <span>设置</span>
+          <button id="settings-close" class="close-btn" title="关闭">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </div>
+
+        <div class="settings-section">
+          <div class="field">
+            <label class="switch">
+              <input type="checkbox" id="webdav-enabled" />
+              <span class="switch-slider"></span>
+              <span class="switch-label">启用 WebDAV 自动备份</span>
+            </label>
+          </div>
+
+          <div class="field">
+            <label>服务器地址</label>
+            <input type="text" id="webdav-url" placeholder="https://dav.jianguoyun.com/dav/" />
+          </div>
+
+          <div class="field">
+            <label>用户名</label>
+            <input type="text" id="webdav-user" placeholder="坚果云邮箱" />
+          </div>
+
+          <div class="field">
+            <label>密码 / 应用密码</label>
+            <input type="password" id="webdav-pass" placeholder="坚果云应用专用密码" />
+          </div>
+
+          <div class="field">
+            <label>备份路径</label>
+            <input type="text" id="webdav-path" placeholder="/savetotext-backup.json" />
+          </div>
+
+          <div class="settings-actions">
+            <button id="webdav-test" class="btn">测试连接</button>
+            <button id="webdav-restore" class="btn">从云端恢复</button>
+            <button id="webdav-save" class="btn danger">保存</button>
+          </div>
+
+          <div id="webdav-status" class="status"></div>
+
+          <p class="tip">
+            每次添加笔记后自动上传备份；打开侧边栏时自动从云端下载最新备份并覆盖本地。
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <script src="db.js"></script>
+    <script src="sidepanel.js"></script>
+  </body>
+</html>

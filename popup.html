@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <title>随手记</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div id="list" class="list">
+      <div id="empty" class="empty">
+        选中网页文字或区域，右键即可摘录/截图……<br />也可以直接在下面写一条。
+      </div>
+    </div>
+
+    <div class="compose">
+      <div class="input-wrap">
+        <textarea id="input" rows="2" placeholder="写一条笔记…"></textarea>
+        <button id="add" class="add-btn" title="追加">
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <div class="toolbar">
+      <button id="html" class="btn">下载 .html</button>
+      <button id="md" class="btn">下载 .md</button>
+      <button id="copy" class="btn">复制</button>
+      <button id="clear" class="btn">清空</button>
+    </div>
+
+    <div id="ver" class="ver"></div>
+
+    <div id="confirm-mask" class="mask hidden">
+      <div class="dialog">
+        <p>确定要清空所有笔记吗？<br />此操作不可撤销。</p>
+        <div class="dialog-actions">
+          <button id="cancel" class="btn">取消</button>
+          <button id="confirm-clear" class="btn danger">清空</button>
+        </div>
+      </div>
+    </div>
+
+    <script src="db.js"></script>
+    <script src="popup.js"></script>
+  </body>
+</html>

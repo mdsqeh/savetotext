@@ -45,11 +45,15 @@ body {
 }
 
 .entry {
-  margin-bottom: 10px;
+  margin-bottom: 14px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--border);
 }
 
 .entry:last-child {
   margin-bottom: 0;
+  padding-bottom: 0;
+  border-bottom: none;
 }
 
 .ts {

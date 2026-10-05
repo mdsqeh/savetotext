@@ -158,5 +158,17 @@
     return entries;
   }
 
-  globalThis.NoteDB = { load, addText, addImage, removeEntry, clear, replaceAll, renderMarkdown };
+  // 按索引更新文字条目：保留 ts/url，重渲染 Markdown
+  async function updateText(index, content) {
+    const entries = await load();
+    if (index < 0 || index >= entries.length) return entries;
+    const e = entries[index];
+    if (e.type !== "text") return entries;
+    e.content = typeof content === "string" ? content : "";
+    e.html = renderMarkdown(e.content);
+    await putDoc({ entries });
+    return entries;
+  }
+
+  globalThis.NoteDB = { load, addText, addImage, removeEntry, clear, replaceAll, updateText, renderMarkdown };
 })();

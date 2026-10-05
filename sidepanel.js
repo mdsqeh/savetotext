@@ -30,6 +30,89 @@ const previewEl = document.getElementById("preview");
 
 let entries = [];
 let searchQuery = "";
+let editingEl = null; // 当前进行就地编辑的条目文本元素
+
+// 从编辑态 DOM 还原文本：块级元素(<div>/<p>)与 <br> 之间补 \n，
+// 不依赖 innerText，避免 contenteditable 吞换行导致多行变一行。
+function readEditedText(el) {
+  const parts = [];
+  (function walk(node) {
+    Array.from(node.childNodes).forEach((c) => {
+      if (c.nodeType === Node.TEXT_NODE) {
+        parts.push(c.nodeValue);
+      } else if (c.nodeType === Node.ELEMENT_NODE) {
+        const tag = c.tagName.toLowerCase();
+        if (tag === "br") {
+          parts.push("\n");
+        } else if (tag === "div" || tag === "p") {
+          walk(c);
+          parts.push("\n");
+        } else {
+          walk(c);
+        }
+      }
+    });
+  })(el);
+  return parts.join("").replace(/\n+$/, "");
+}
+
+// —— 列表内容就地编辑 ——
+// 双击进入编辑（contenteditable），失焦自动保存，Esc 取消
+function startEdit(el, realIndex) {
+  // 已在编辑其他条目则先提交它
+  if (editingEl && editingEl !== el) commitEdit(editingEl, editingEl._realIndex, true);
+  editingEl = el;
+  el._realIndex = realIndex;
+  const text = (entries[realIndex] && entries[realIndex].content) || "";
+  el.classList.add("editing");
+  el.setAttribute("contenteditable", "true");
+  // 编辑态：把源码按行拆成 <div> 块，保证保存时 innerText 能完整还原所有换行（含空行）。
+  // 直接 textContent 赋值时，contenteditable 会吞掉文本节点里的 \n，导致换行丢失。
+  while (el.firstChild) el.removeChild(el.firstChild);
+  const frag = document.createDocumentFragment();
+  text.split("\n").forEach((line) => {
+    const d = document.createElement("div");
+    d.textContent = line;
+    frag.appendChild(d);
+  });
+  el.appendChild(frag);
+  // 光标定位到末尾
+  el.focus();
+  const range = document.createRange();
+  range.selectNodeContents(el);
+  range.collapse(false);
+  const sel = window.getSelection();
+  sel.removeAllRanges();
+  sel.addRange(range);
+}
+
+function commitEdit(el, realIndex, cancelled) {
+  if (!el) return;
+  const newText = cancelled ? "" : readEditedText(el);
+  el.setAttribute("contenteditable", "false");
+  el.classList.remove("editing");
+  editingEl = null;
+  if (cancelled) {
+    // 取消：直接重渲染恢复原内容
+    render();
+    return;
+  }
+  const old = entries[realIndex] && entries[realIndex].content;
+  if (newText.trim() !== (old || "").trim()) {
+    NoteDB.updateText(realIndex, newText)
+      .then((res) => {
+        entries = res;
+        render();
+        // 内容变更后自动备份
+        backgroundCmd("webdav:backup");
+      })
+      .catch(() => {
+        render();
+      });
+  } else {
+    render();
+  }
+}
 
 function fmt(ts) {
   const d = new Date(ts);
@@ -147,6 +230,21 @@ function render() {
         while (parsed.firstChild) t.appendChild(parsed.firstChild);
       }
       t.appendChild(del);
+      // 双击进入就地编辑，失焦自动保存，Esc 取消
+      t.addEventListener("dblclick", (ev) => {
+        ev.preventDefault();
+        startEdit(t, realIndex);
+      });
+      t.addEventListener("blur", () => {
+        if (editingEl === t) commitEdit(t, t._realIndex, false);
+      });
+      t.addEventListener("keydown", (ev) => {
+        if (ev.key === "Escape") {
+          ev.preventDefault();
+          commitEdit(t, t._realIndex, true);
+          ev.stopPropagation();
+        }
+      });
       div.appendChild(t);
     }
     list.appendChild(div);

@@ -62,12 +62,21 @@ body {
   position: relative;
   word-break: break-word;
   line-height: 1.5;
+  cursor: text;
 }
 .text p {
   margin: 0 0 6px;
 }
 .text p:last-child {
   margin-bottom: 0;
+}
+.text.editing {
+  outline: none;
+  border: 1px solid var(--accent);
+  border-radius: 4px;
+  padding: 4px 6px;
+  background: #fff;
+  cursor: text;
 }
 
 .src {

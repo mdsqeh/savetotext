@@ -52,7 +52,7 @@
     let dirty = false;
     for (const e of entries) {
       if (e.type === "text" && !e.html && e.content) {
-        e.html = toHtml(e.content);
+        e.html = renderMarkdown(e.content);
         dirty = true;
       }
     }
@@ -61,7 +61,53 @@
     return entries;
   }
 
-  // 将纯文本转为带格式的 HTML：保留段落（双换行）和换行（单换行）
+  // 白名单：仅保留安全的展示标签，剥离所有属性和事件，避免 XSS
+  // 这些标签用于 safeHTML 生成，供 background 和 sidepanel 复用
+  const SAFE_TAGS = new Set([
+    "p", "br", "strong", "em", "del", "b", "i", "u", "s",
+    "h1", "h2", "h3", "h4", "h5", "h6",
+    "ul", "ol", "li", "blockquote", "code", "pre", "hr",
+    "a", "img", "table", "thead", "tbody", "tr", "th", "td"
+  ]);
+
+  function sanitize(html) {
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(html || "", "text/html");
+    const walker = doc.createTreeWalker(doc.body, NodeFilter.SHOW_ELEMENT);
+    const toRemove = [];
+    while (walker.nextNode()) {
+      const el = walker.currentNode;
+      if (!SAFE_TAGS.has(el.tagName.toLowerCase())) {
+        toRemove.push(el);
+        continue;
+      }
+      // 剥离所有属性
+      const attrs = Array.from(el.attributes);
+      attrs.forEach((a) => {
+        const name = a.name.toLowerCase();
+        const val = a.value.trim();
+        if (name === "href" && /^https?:\/\//i.test(val)) return;
+        if (name === "src" && /^(data:image\/(png|jpeg|gif|webp);base64,|https?:\/\/)/i.test(val)) return;
+        el.removeAttribute(a.name);
+      });
+    }
+    toRemove.forEach((el) => el.parentNode && el.parentNode.removeChild(el));
+    return doc.body.innerHTML;
+  }
+
+  // 将 Markdown 渲染为安全的 HTML（供列表展示、HTML 导出和预览复用）
+  function renderMarkdown(content) {
+    if (typeof marked !== "undefined") {
+      try {
+        return sanitize(marked.parse(content || ""));
+      } catch {
+        return toHtml(content);
+      }
+    }
+    return toHtml(content);
+  }
+
+  // 兜底：将纯文本转为带格式的 HTML：保留段落（双换行）和换行（单换行）
   function toHtml(text) {
     const esc = (s) =>
       s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
@@ -73,7 +119,7 @@
 
   async function addText(content, url) {
     const entries = await load();
-    entries.push({ type: "text", content, html: toHtml(content), ts: Date.now(), url });
+    entries.push({ type: "text", content, html: renderMarkdown(content), ts: Date.now(), url });
     await putDoc({ entries });
     return entries;
   }
@@ -104,7 +150,7 @@
     let dirty = false;
     for (const e of entries) {
       if (e.type === "text" && !e.html && e.content) {
-        e.html = toHtml(e.content);
+        e.html = renderMarkdown(e.content);
         dirty = true;
       }
     }
@@ -112,5 +158,5 @@
     return entries;
   }
 
-  globalThis.NoteDB = { load, addText, addImage, removeEntry, clear, replaceAll };
+  globalThis.NoteDB = { load, addText, addImage, removeEntry, clear, replaceAll, renderMarkdown };
 })();

@@ -34,11 +34,14 @@
         </button>
         <span>输入与编辑</span>
       </div>
-      <div class="input-wrap">
-        <textarea id="input" rows="3" placeholder="写一条笔记…"></textarea>
-        <button id="add" class="add-btn" title="追加">
-          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
-        </button>
+      <div class="compose-body">
+        <div id="preview" class="preview-markdown"></div>
+        <div class="input-wrap">
+          <textarea id="input" rows="3" placeholder="写一条笔记…（支持 Markdown）"></textarea>
+          <button id="add" class="add-btn" title="追加">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+          </button>
+        </div>
       </div>
     </div>
 
@@ -107,6 +110,7 @@
       </div>
     </div>
 
+    <script src="vendor/marked.min.js"></script>
     <script src="db.js"></script>
     <script src="sidepanel.js"></script>
   </body>

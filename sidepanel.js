@@ -26,6 +26,7 @@ const expandIcon = document.getElementById("expand-icon");
 const verEl = document.getElementById("ver");
 const searchEl = document.getElementById("search");
 const searchClearEl = document.getElementById("search-clear");
+const previewEl = document.getElementById("preview");
 
 let entries = [];
 let searchQuery = "";
@@ -65,7 +66,7 @@ function render() {
     const parser = new DOMParser();
     const doc = parser.parseFromString(html || "", "text/html");
     // 无关键词时无需高亮，直接返回（indexOf("") 恒为 0 会死循环）
-    if (!q) return doc.body.firstChild;
+    if (!q) return doc.body;
     const walker = doc.createTreeWalker(doc.body, NodeFilter.SHOW_TEXT);
     const nodes = [];
     while (walker.nextNode()) nodes.push(walker.currentNode);
@@ -88,7 +89,7 @@ function render() {
       }
       node.parentNode.replaceChild(frag, node);
     });
-    return doc.body.firstChild;
+    return doc.body;
   };
 
   shownEntries.forEach((e, shownIndex) => {
@@ -140,9 +141,11 @@ function render() {
     } else {
       const t = document.createElement("div");
       t.className = "text";
-      // e.html 由扩展自身 toHtml() 生成，仅含 <p> 和 <br>，用 DOM API 安全渲染
+      // e.html 是 Markdown 渲染后的白名单安全 HTML，用 DOM API 安全渲染
       const parsed = highlight(e.html || e.content);
-      if (parsed) t.appendChild(parsed);
+      if (parsed) {
+        while (parsed.firstChild) t.appendChild(parsed.firstChild);
+      }
       t.appendChild(del);
       div.appendChild(t);
     }
@@ -177,10 +180,24 @@ async function addNote() {
   const url = await activeTabUrl();
   entries = await NoteDB.addText(v, url);
   input.value = "";
+  renderPreview();
   document.getElementById("add").classList.remove("active");
   render();
   // 自动备份
   backgroundCmd("webdav:backup");
+}
+
+// 输入区实时预览：Markdown 渲染为安全 HTML，用 DOM API 填充（不用 innerHTML）
+function renderPreview() {
+  const v = input.value.trim();
+  if (!v) {
+    while (previewEl.firstChild) previewEl.removeChild(previewEl.firstChild);
+    return;
+  }
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(NoteDB.renderMarkdown(v), "text/html");
+  while (previewEl.firstChild) previewEl.removeChild(previewEl.firstChild);
+  while (doc.body.firstChild) previewEl.appendChild(doc.body.firstChild);
 }
 
 function setBtn(btn, text, disabled) {
@@ -471,22 +488,14 @@ toggleExpandBtn.addEventListener("click", () => {
     ? '<polyline points="7 9 12 4 17 9"/><line x1="12" y1="4" x2="12" y2="20"/><polyline points="7 15 12 20 17 15"/>'
     : '<polyline points="7 15 12 20 17 15"/><line x1="12" y1="4" x2="12" y2="20"/><polyline points="7 9 12 4 17 9"/>';
   if (isExpanded) {
-    input.style.height = "100%";
     input.focus();
-  } else {
-    input.style.height = "";
   }
 });
 
 document.getElementById("add").addEventListener("click", addNote);
-input.addEventListener("keydown", (e) => {
-  if (e.key === "Enter" && !e.shiftKey) {
-    e.preventDefault();
-    addNote();
-  }
-});
 input.addEventListener("input", () => {
   document.getElementById("add").classList.toggle("active", input.value.trim().length > 0);
+  renderPreview();
 });
 htmlBtn.addEventListener("click", downloadHtml);
 mdBtn.addEventListener("click", downloadMd);

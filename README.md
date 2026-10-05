@@ -22,7 +22,8 @@ f:\MyApplication\SaveToText\
 │   ├── icon48.png
 │   └── icon128.png
 └── vendor\
-    └── snapdom.js         # 第三方库，用于 DOM 元素截图
+    ├── snapdom.js         # 第三方库，用于 DOM 元素截图
+    └── marked.min.js      # 第三方库 (MIT)，用于 Markdown 渲染
 核心功能模块
 文件	职责
 manifest.json	扩展入口，声明权限、Service Worker、Content Script、弹出窗口

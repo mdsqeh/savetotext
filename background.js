@@ -1,4 +1,4 @@
-importScripts("db.js");
+importScripts("vendor/marked.min.js", "db.js");
 
 const MENU_APPEND = "append-to-note";
 const MENU_VIEWPORT = "viewport-capture";

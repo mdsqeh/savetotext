@@ -139,11 +139,152 @@ body {
 
 .compose.expanded {
   flex: 1;
+  min-height: 0;
 }
 
-.compose.expanded .input-wrap,
-.compose.expanded textarea {
-  height: 100%;
+.compose.expanded .compose-body {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.compose.expanded .input-wrap {
+  flex: 1;
+  display: flex;
+  min-height: 0;
+}
+
+.compose.expanded .input-wrap textarea {
+  flex: 1;
+  height: auto;
+  min-height: 0;
+}
+
+.compose-body {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.preview-markdown {
+  flex-shrink: 1;
+  overflow-y: auto;
+  max-height: 96px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: #fafafa;
+  padding: 6px 8px;
+  font-size: 13px;
+  line-height: 1.5;
+  min-height: 0;
+}
+
+.compose.expanded .preview-markdown {
+  flex: 1.2;
+  max-height: none;
+}
+
+.preview-markdown > :first-child,
+.text > :first-child {
+  margin-top: 0;
+}
+
+.preview-markdown > :last-child,
+.text > :last-child {
+  margin-bottom: 0;
+}
+
+.preview-markdown p,
+.text p {
+  margin: 0 0 6px;
+}
+
+.preview-markdown h1,
+.preview-markdown h2,
+.preview-markdown h3,
+.preview-markdown h4,
+.preview-markdown h5,
+.preview-markdown h6,
+.text h1,
+.text h2,
+.text h3,
+.text h4,
+.text h5,
+.text h6 {
+  margin: 8px 0 4px;
+  line-height: 1.3;
+}
+
+.preview-markdown h1, .text h1 { font-size: 16px; }
+.preview-markdown h2, .text h2 { font-size: 15px; }
+.preview-markdown h3, .text h3 { font-size: 14px; }
+.preview-markdown h4,
+.preview-markdown h5,
+.preview-markdown h6,
+.text h4,
+.text h5,
+.text h6 { font-size: 13px; }
+
+.preview-markdown ul,
+.preview-markdown ol,
+.text ul,
+.text ol {
+  margin: 4px 0;
+  padding-left: 20px;
+}
+
+.preview-markdown blockquote,
+.text blockquote {
+  margin: 4px 0;
+  padding-left: 10px;
+  border-left: 3px solid var(--border);
+  color: var(--muted);
+}
+
+.preview-markdown code,
+.text code {
+  font-family: ui-monospace, monospace;
+  font-size: 12px;
+  background: rgba(0, 0, 0, 0.06);
+  border-radius: 3px;
+  padding: 1px 4px;
+}
+
+.preview-markdown pre,
+.text pre {
+  background: #1f2937;
+  color: #f9fafb;
+  border-radius: 6px;
+  padding: 8px;
+  overflow: auto;
+  margin: 6px 0;
+}
+
+.preview-markdown pre code,
+.text pre code {
+  background: none;
+  padding: 0;
+  color: inherit;
+}
+
+.preview-markdown a,
+.text a {
+  color: var(--accent);
+}
+
+.preview-markdown table,
+.text table {
+  border-collapse: collapse;
+  margin: 6px 0;
+}
+
+.preview-markdown th,
+.preview-markdown td,
+.text th,
+.text td {
+  border: 1px solid var(--border);
+  padding: 4px 8px;
 }
 
 .compose-header {

@@ -24,8 +24,11 @@ const toggleExpandBtn = document.getElementById("toggle-expand");
 const composeEl = document.querySelector(".compose");
 const expandIcon = document.getElementById("expand-icon");
 const verEl = document.getElementById("ver");
+const searchEl = document.getElementById("search");
+const searchClearEl = document.getElementById("search-clear");
 
 let entries = [];
+let searchQuery = "";
 
 function fmt(ts) {
   const d = new Date(ts);
@@ -35,8 +38,60 @@ function fmt(ts) {
 
 function render() {
   while (list.firstChild) list.removeChild(list.firstChild);
-  empty.style.display = entries.length ? "none" : "";
-  entries.forEach((e, i) => {
+
+  // 匹配判断：文字内容或来源链接包含关键词（截图无文本，不参与）
+  const q = searchQuery.trim().toLowerCase();
+  const matches = (e) => {
+    if (!q) return true;
+    if (e.type === "image") return false;
+    if (e.content && e.content.toLowerCase().includes(q)) return true;
+    if (e.url && e.url.toLowerCase().includes(q)) return true;
+    return false;
+  };
+
+  const shownEntries = entries.filter(matches);
+
+  if (q) {
+    empty.textContent = shownEntries.length ? "" : "无匹配结果";
+    empty.style.display = shownEntries.length ? "none" : "";
+  } else {
+    empty.innerHTML =
+      "选中网页文字或区域，右键即可摘录/截图……<br />也可以直接在下面写一条。";
+    empty.style.display = entries.length ? "none" : "";
+  }
+
+  // 高亮文本中的关键词（仅文字内容，来源链接保持普通文本）
+  const highlight = (html) => {
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(html || "", "text/html");
+    // 无关键词时无需高亮，直接返回（indexOf("") 恒为 0 会死循环）
+    if (!q) return doc.body.firstChild;
+    const walker = doc.createTreeWalker(doc.body, NodeFilter.SHOW_TEXT);
+    const nodes = [];
+    while (walker.nextNode()) nodes.push(walker.currentNode);
+    nodes.forEach((node) => {
+      if (!node.nodeValue || !node.nodeValue.toLowerCase().includes(q)) return;
+      const frag = document.createDocumentFragment();
+      const low = node.nodeValue.toLowerCase();
+      let rest = node.nodeValue;
+      while (rest) {
+        const idx = rest.toLowerCase().indexOf(q);
+        if (idx < 0) {
+          frag.appendChild(document.createTextNode(rest));
+          break;
+        }
+        if (idx > 0) frag.appendChild(document.createTextNode(rest.slice(0, idx)));
+        const mark = document.createElement("mark");
+        mark.textContent = rest.slice(idx, idx + q.length);
+        frag.appendChild(mark);
+        rest = rest.slice(idx + q.length);
+      }
+      node.parentNode.replaceChild(frag, node);
+    });
+    return doc.body.firstChild;
+  };
+
+  shownEntries.forEach((e, shownIndex) => {
     const div = document.createElement("div");
     div.className = "entry";
 
@@ -54,14 +109,21 @@ function render() {
       src.textContent = e.url;
       src.title = e.url;
       div.appendChild(src);
+    } else {
+      const src = document.createElement("div");
+      src.className = "src";
+      div.appendChild(src);
     }
+
+    // 原始索引（entries 内）用于删除
+    const realIndex = entries.indexOf(e);
 
     const del = document.createElement("button");
     del.className = "del";
     del.textContent = "×";
     del.title = "删除";
     del.addEventListener("click", async () => {
-      entries = await NoteDB.removeEntry(i);
+      entries = await NoteDB.removeEntry(realIndex);
       render();
       document.dispatchEvent(new CustomEvent("st_entry_deleted"));
     });
@@ -79,15 +141,14 @@ function render() {
       const t = document.createElement("div");
       t.className = "text";
       // e.html 由扩展自身 toHtml() 生成，仅含 <p> 和 <br>，用 DOM API 安全渲染
-      const parser = new DOMParser();
-      const doc = parser.parseFromString(e.html || e.content, "text/html");
-      while (doc.body.firstChild) t.appendChild(doc.body.firstChild);
+      const parsed = highlight(e.html || e.content);
+      if (parsed) t.appendChild(parsed);
       t.appendChild(del);
       div.appendChild(t);
     }
     list.appendChild(div);
   });
-  list.scrollTop = list.scrollHeight;
+  list.scrollTop = q ? 0 : list.scrollHeight;
 }
 
 async function refresh() {
@@ -447,6 +508,20 @@ settingsBtn.addEventListener("click", openSettings);
 settingsClose.addEventListener("click", closeSettings);
 settingsMask.addEventListener("click", (e) => {
   if (e.target === settingsMask) closeSettings();
+});
+
+// 内容搜索：实时过滤 + 高亮
+searchEl.addEventListener("input", () => {
+  searchQuery = searchEl.value;
+  searchClearEl.hidden = !searchQuery;
+  render();
+});
+searchClearEl.addEventListener("click", () => {
+  searchEl.value = "";
+  searchQuery = "";
+  searchClearEl.hidden = true;
+  render();
+  searchEl.focus();
 });
 
 verEl.textContent = "v1.9.0";

@@ -93,8 +93,8 @@ function commitEdit(el, realIndex, cancelled) {
   el.classList.remove("editing");
   editingEl = null;
   if (cancelled) {
-    // 取消：直接重渲染恢复原内容
-    render();
+    // 取消：重新渲染并保持滚动位置
+    renderKeepScroll(realIndex);
     return;
   }
   const old = entries[realIndex] && entries[realIndex].content;
@@ -102,15 +102,30 @@ function commitEdit(el, realIndex, cancelled) {
     NoteDB.updateText(realIndex, newText)
       .then((res) => {
         entries = res;
-        render();
+        renderKeepScroll(realIndex);
         // 内容变更后自动备份
         backgroundCmd("webdav:backup");
       })
       .catch(() => {
-        render();
+        renderKeepScroll(realIndex);
       });
   } else {
-    render();
+    renderKeepScroll(realIndex);
+  }
+}
+
+// 渲染列表后，尽量保持当前编辑条目在视口内的位置（避免跳到列表底部）
+function renderKeepScroll(realIndex) {
+  const listTop = list.getBoundingClientRect().top;
+  const entryEl = list.querySelector(`.entry[data-real-index="${realIndex}"]`);
+  const before = entryEl ? entryEl.getBoundingClientRect().top - listTop : 0;
+  const oldScroll = list.scrollTop;
+  render();
+  list.scrollTop = oldScroll;
+  const afterEl = list.querySelector(`.entry[data-real-index="${realIndex}"]`);
+  if (afterEl) {
+    const after = afterEl.getBoundingClientRect().top - list.getBoundingClientRect().top;
+    list.scrollTop += after - before;
   }
 }
 
@@ -201,6 +216,7 @@ function render() {
 
     // 原始索引（entries 内）用于删除
     const realIndex = entries.indexOf(e);
+    div.dataset.realIndex = realIndex;
 
     const del = document.createElement("button");
     del.className = "del";
